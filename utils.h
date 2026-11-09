@@ -92,11 +92,13 @@ int leerEnteroEntre(int valorMin, int valorMax, cadena mensaje)
 }
 void comprobarEntero(int *num)
 {
-    fflush(stdin);
     while (scanf("%d", num) != 1)
     {
         puts("Tenés que ingresar un número.");
-        fflush(stdin);
+        int caracter;
+        while ((caracter = getchar()) != '\n' && caracter != EOF)
+        {
+        }
     }
 }
 
@@ -310,12 +312,9 @@ void ordenarVectorDeEnterosDescendente(int vec[], int cant)
 
 void leerCadena(cadena mensaje, cadena target)
 {
-    /* Muestra el mensaje al usuario y luego lee una
-    cadena por referencia usando la función 'gets()' */
     printf("%s", mensaje);
-    fflush(stdin);
-    gets(target);
-    // scanf("%s", target); // No va el &, porque una cadena ya es un puntero al primer elemento.
+    fgets(target, sizeof(cadena), stdin);
+    target[strcspn(target, "\n")] = '\0';
 }
 void leerCadenaEntre(int minLength, int maxLength, cadena mensaje, cadena target)
 {

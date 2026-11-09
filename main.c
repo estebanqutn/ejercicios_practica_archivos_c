@@ -11,6 +11,8 @@
 #define MIN_USERS 0
 #define MAX_USERS 20
 
+#define VACIO 0
+
 typedef struct
 {
     cadena nombre;
@@ -19,43 +21,42 @@ typedef struct
 
 ///////////////////funciones/////////////////////
 int cargarPersonas(Persona lista[], int *cant);
-bool guardarPersonas(Persona lista[], int cant);
+void guardarPersonas(Persona lista[], int cant);
+void limpiarPantalla(void);
 
+///////crud/////
+void inicio();
+void verLista(Persona lista[], int cant);
+void agregarALista(Persona lista[], int *cant);
+void elegirOpcion(Persona lista[], int *cant);
 ///////////////////////////////////////////////////
 
 int main(void)
 {
     // Persona listaPersonas[MAX_USERS] = {
-    //     {nombre : "Esteban", edad : 33},
-    //     {nombre : "Belen", edad : 35},
-    //     {nombre : "Cleopatra", edad : 10}
+    //     {.nombre = "Esteban", .edad = 33},
+    //     {.nombre = "Belen", .edad = 35},
+    //     {.nombre = "Cleopatra", .edad = 10},
+    //     {.nombre = "Thelma", .edad = 6}
     // };
-
     Persona listaPersonas[MAX_USERS];
-    int cantidad = 3;
+    int cantidadPersonas = 0;
+    int cantidadLeida = cargarPersonas(listaPersonas, &cantidadPersonas);
     
-    int resultado = cargarPersonas(listaPersonas, &cantidad);
-
-    
-    if (resultado != ROTO){
-        for (int i = 0; i < cantidad; i++){
-            printf("%d. Nombre: %s, Edad: %d\n",i+1,listaPersonas[i].nombre,listaPersonas[i].edad);
-        }
-
-        if(!guardarPersonas(listaPersonas, cantidad)){
-            puts("Error al guardar personas");
-        }
+    if(cantidadLeida >=0){
+        cantidadPersonas = cantidadLeida;
     }else{
-        puts("Hubo un error.");
+        puts("No se pudo cargar usuarios");
     }
-    
+
+    elegirOpcion(listaPersonas, &cantidadPersonas);
     return 0;
 }
 
 int cargarPersonas(Persona lista[], int *cant)
 {
 
-    int carga = ROTO;
+    int cantidad = -1;
     FILE *f = fopen("../data/personas.dat", "rb");
 
     if (f != NULL)
@@ -65,7 +66,9 @@ int cargarPersonas(Persona lista[], int *cant)
         {
             if (fread(lista, sizeof(Persona), *cant, f) == (size_t)*cant && (fgetc(f) == EOF && !ferror(f)))
             {
-                carga = EXISTE;
+                puts("Usuarios leidos correctamente");
+            }else{
+                puts("Error en lectura de usuarios");
             }
         }
         fclose(f);
@@ -73,33 +76,86 @@ int cargarPersonas(Persona lista[], int *cant)
     else if (errno == ENOENT)
     {
         (*cant) = MIN_USERS;
-        carga = NO_EXISTE;
     }
-    return carga;
+    return cantidad;
 }
 
-bool guardarPersonas(Persona lista[], int cant)
+void guardarPersonas(Persona lista[], int cant)
 {
     FILE *f = fopen("../data/personas.dat", "wb");
-    bool respuesta = false;
-    int cierre;
 
     if (f != NULL)
     {
         if (fwrite(&cant, sizeof(int), 1, f) == 1 && (cant >= 0 && cant <= 20))
         {
 
-            respuesta = (fwrite(lista, sizeof(Persona), cant, f) == (size_t)cant);
+           (fwrite(lista, sizeof(Persona), cant, f) == (size_t)cant)? "Todo ok" : "Error al guardar";
         }
-        cierre = fclose(f);
-        if (cierre != 0)
-        {
-            respuesta = false;
-        }
+
+        fclose(f);
+
     }
     else
     {
         perror("Error");
     }
-    return respuesta;
+}
+
+
+void inicio(){
+    puts("\n1. Agregar a la lista\n2. Ver lista\n0. Salir");
+}
+
+void elegirOpcion(Persona lista[], int *cant){
+    int opc;
+    do {
+        system("cls");
+        inicio();
+        opc = leerEnteroEntre(0, 2, "Elija una opcion: ");
+        switch(opc){
+            case 1:
+                agregarALista(lista, cant);
+                break;
+            case 2:
+                verLista(lista, *cant);
+                break;
+        }
+    } while(opc != 0);
+
+    guardarPersonas(lista, *cant);
+}
+
+void agregarALista(Persona lista[], int *cant){
+    system("cls");
+    if (*cant < MAX_USERS){
+        cadena nombre;
+        getchar();
+        leerCadena("Ingrese un nombre: ", nombre);
+        int edad = leerEnteroEntre(1, 99, "Ingrese una edad: ");
+        bool confirma = confirmaUsuario("Desea confirmar datos?");
+        if(confirma){
+            strcpy(lista[*cant].nombre, nombre);
+            lista[*cant].edad = edad;
+            (*cant)++;
+            puts("Usuario agregado con exito.");
+        }else{
+            puts("Operacion cancelada");
+        }
+    }else{
+        puts("La lista esta completa.");
+    }
+    system("pause");
+}
+
+void verLista(Persona lista[], int cant){
+    system("cls");
+    if (cant != VACIO){
+        puts("Lista de usuarios:");
+        for (int i = 0; i < cant; i++){
+            printf("%d. Nombre: %s, Edad: %d\n", i + 1, lista[i].nombre, lista[i].edad);
+        }
+    }else{
+        puts("---La lista esta vacia.---");
+    }
+    system("pause");
 }
